@@ -8,7 +8,7 @@ This is a fork of zipme's [redmine_lightbox](https://github.com/zipme/redmine_li
 
 ## Compatibility
 
-**Version 1.0.0 supports Redmine 6.0 or higher**
+Version 1.0.0 supports **Redmine 6.0 or higher**
 
 ## Installation and Setup
 
