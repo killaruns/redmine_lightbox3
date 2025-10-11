@@ -1,21 +1,22 @@
 /*
- * Lightbox3 for Redmine 6 - Final Hybrid Version
- *
- * This version incorporates the correct selector (`a.thumbnail`) for Wiki pages
+ * Lightbox3 for Redmine 6 - Universal Compatibility Version
+ * This script is designed to work with both Redmine 6.0.x and 6.1.x,
+ * especially handling the different HTML structures for journal attachments.
  */
 $(document).ready(function() {
 
     // --- A smart function to process any link and decide if it needs a lightbox ---
     function applyLightbox(linkElement) {
         var $link = $(linkElement);
-        var href = $link.attr('href');
+        var href = $link.attr('href') || "";
+        var text = $link.text() || "";
 
-        if (!href || $link.hasClass('delete') || $link.hasClass('icon-del')) {
+        if ($link.hasClass('delete') || $link.hasClass('icon-del') || href === "") {
             return;
         }
 
-        var isImage = href.match(/\.(jpe?g|png|gif|bmp|webp)$/i);
-        var isPdf = href.match(/\.pdf$/i);
+        var isImage = href.match(/\.(jpe?g|png|gif|bmp|webp)$/i) || text.match(/\.(jpe?g|png|gif|bmp|webp)$/i);
+        var isPdf = href.match(/\.pdf$/i) || text.match(/\.pdf$/i);
 
         if (isImage) {
             $link.addClass('lightbox');
@@ -25,18 +26,29 @@ $(document).ready(function() {
     }
 
 
-    // --- Apply the logic to DIFFERENT sections of Redmine ---
+    // --- Apply the logic to all relevant sections ---
 
-    // 1. Main Attachment Block (top of issue, documents, files, etc.)
-    $('div.attachments a').each(function() {
+    // 1. Main Attachment Block, Documents, News, Files etc. (Works for both versions)
+    $('div.attachments a, table.documents a.attachment, div.news a.attachment, div.wiki .attachments a').each(function() {
         applyLightbox(this);
     });
 
-    // 2. Journal / Notes Section
-    $('div.journal div.thumbnails a, div.journal ul.details a[href*="/attachments/"]:not(.icon-download)').each(function() {
+    // 2. Journal / Notes Section - The key compatibility fix
+    // This selector now includes patterns for BOTH Redmine 6.0.x and 6.1.x.
+    // It will find the correct links in either environment.
+    var journalAttachmentSelectors = [
+        'div.journal ul.details a[href*="/attachments/"]:not(.icon-download)',    // Redmine 6.0.x filename links
+        'div.journal div.thumbnails a',                                         // Redmine 6.0.x thumbnail links
+        'div.journal ul.journal-details a[href*="/attachments/"]:not(.icon-download)', // Redmine 6.1.x filename links
+        'div.journal .thumbnail a'                                              // Redmine 6.1.x thumbnail links
+    ].join(', ');
+
+    $(journalAttachmentSelectors).each(function() {
         var $link = $(this);
         var wrongHref = $link.attr('href');
-        var filename = $link.find('img').attr('title') || $link.text().trim();
+        
+        // Find the filename from either img alt/title or the link text itself.
+        var filename = $link.find('img').attr('alt') || $link.find('img').attr('title') || $link.text().trim();
 
         if (wrongHref && filename) {
             var attachmentId = wrongHref.split('/')[2];
@@ -48,38 +60,22 @@ $(document).ready(function() {
         }
     });
     
-    // 3. UPDATED - Wiki Embedded Thumbnails (Using the correct selector now)
-    // This targets images embedded with the {{thumbnail()}} macro using the `a.thumbnail` class.
+    // 3. Wiki Embedded Thumbnails (Works for both versions)
     $('div.wiki a.thumbnail').each(function() {
         var $link = $(this);
         var wrongHref = $link.attr('href');
         var $image = $link.find('img');
-        
-        // For these wiki thumbnails, the filename is in the 'alt' attribute.
         var filename = $image.attr('alt'); 
 
         if (wrongHref && filename) {
             var attachmentId = wrongHref.split('/')[2];
             if ($.isNumeric(attachmentId)) {
-                // Rebuild the href to point to the correct download path
                 var correctHref = '/attachments/download/' + attachmentId + '/' + filename;
                 $link.attr('href', correctHref);
-                
-                // After fixing the link, process it to add the lightbox class.
                 applyLightbox(this);
             }
         }
     });
-
-
-    // --- Precautionary fix for the duplicate icon mystery ---
-    $('div.journal ul.details li:contains("File")').each(function() {
-        var $downloadIcons = $(this).find('a.icon-download');
-        if ($downloadIcons.length > 1) {
-            $downloadIcons.slice(1).remove();
-        }
-    });
-
 
     // --- INITIALIZE LIGHTBOX ---
     $('a.lightbox').fancybox({
