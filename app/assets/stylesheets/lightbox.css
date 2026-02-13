@@ -21,7 +21,6 @@ div.thumbnails img {
   padding: 2px;
   background: #FFFFFF;
 }
-}
 
 a.lightbox_preview img  {
   margin: 0 4px;
@@ -66,6 +65,7 @@ img.fancybox-image {
   left: -70px;
 }
 
+/* Contributed by Alexander: horizontal thumbnail display */
 /* Горизонтальное отображение миниатюр в шапке задачи */
 div.attachments div.thumbnails.images {
   display: flex;
@@ -76,4 +76,3 @@ div.attachments div.thumbnails.images {
 div.attachments div.thumbnails.images > div {
   margin: 0;
 }
-
